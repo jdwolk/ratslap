@@ -1,7 +1,8 @@
 module Ratslap.Card (
   Card(..),
   Suit(..),
-  CardVal(..)
+  CardVal(..),
+  deck
 ) where
 
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Eq, Read, Enum)
@@ -13,12 +14,11 @@ instance Show Suit where
   show Spades   = "\x2660"
 
 
-data CardVal = One | Two | Three | Four | Five | Six | Seven | Eight | Nine |
-               Ten | Jack | Queen | King | Ace
-               deriving (Eq, Read, Bounded)
+data CardVal = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten |
+               Jack | Queen | King | Ace
+               deriving (Eq, Read, Enum, Bounded)
 
 instance Show CardVal where
-  show One    = show 1
   show Two    = show 2
   show Three  = show 3
   show Four   = show 4
@@ -37,6 +37,8 @@ instance Show CardVal where
 data Card = Card CardVal Suit deriving (Eq, Read)
 
 instance Show Card where
-  show (Card v s) = "[" ++ show v ++ " " ++ show s ++ "]"
+  show (Card v s) = "[" ++ show v ++ show s ++ "]"
 
+deck :: [Card]
+deck = [Card v s | v <- [Two .. Ace], s <- [Clubs .. Spades] ]
 
