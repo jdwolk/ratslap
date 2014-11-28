@@ -1,13 +1,11 @@
 module Ratslap.Game (
-  topTwoCards
+  slapValid
 ) where
 
 import Ratslap.Card
 
-type CardWindow = [Card]
-
-topTwoCards :: CardWindow -> (Maybe Card, Maybe Card)
-topTwoCards [] = (Nothing, Nothing)
-topTwoCards [c] = (Just c, Nothing)
-topTwoCards (x:y:_) = (Just x, Just y)
+slapValid :: [Card] -> Bool
+slapValid (x:y:_)   = cardVal x == cardVal y
+slapValid (x:_:z:_) = cardVal x == cardVal z
+slapValid _         = False
 

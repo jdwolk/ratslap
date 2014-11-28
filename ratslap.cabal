@@ -15,7 +15,7 @@ cabal-version:       >=1.8
 
 library
   hs-source-dirs: src
-  -- exposed-modules:
+  exposed-modules: Ratslap.Card, Ratslap.Game
   build-depends:  base ==4.6.*
 
 executable ratslap

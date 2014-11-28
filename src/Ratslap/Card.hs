@@ -34,7 +34,10 @@ instance Show CardVal where
   show Ace    = "A"
 
 
-data Card = Card CardVal Suit deriving (Eq, Read)
+data Card = Card {
+  cardVal :: CardVal,
+  suit    :: Suit
+} deriving (Eq, Read)
 
 instance Show Card where
   show (Card v s) = "[" ++ show v ++ show s ++ "]"
