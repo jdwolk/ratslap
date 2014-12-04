@@ -16,8 +16,19 @@ cabal-version:       >=1.8
 library
   hs-source-dirs: src
   exposed-modules: Ratslap.Card, Ratslap.Game
-  build-depends:  base ==4.6.*
+  build-depends:        base ==4.6.*
 
 executable ratslap
   main-is: src/Main.hs
-  build-depends:       base ==4.6.*
+  build-depends:        base ==4.6.*
+
+test-suite Tests
+  hs-source-dirs: test
+  main-is: tests.hs
+  Type: exitcode-stdio-1.0
+  build-depends:        base ==4.6.*
+                        , Cabal >= 1.16.0
+                        , ratslap
+                        , QuickCheck
+                        , tasty
+                        , tasty-quickcheck
