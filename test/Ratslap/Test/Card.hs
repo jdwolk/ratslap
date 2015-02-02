@@ -1,4 +1,4 @@
-module Ratslap.Card.Test where
+module Ratslap.Test.Card where
 
 import Test.Tasty
 import Test.Tasty.QuickCheck as QC
@@ -8,9 +8,10 @@ instance Arbitrary CardVal where
   arbitrary = elements [Two .. Ace]
 
 cardSuite :: TestTree
-cardSuite = testGroup "Card Tests"
-   [ QC.testProperty "52 cards in a deck" prop_deckLength,
-     QC.testProperty "4 cards of with each value in a deck" prop_cardValInDeck ]
+cardSuite = testGroup "Card Tests" [
+  QC.testProperty "52 cards in a deck" prop_deckLength,
+  QC.testProperty "4 cards of each value in a deck" prop_cardValInDeck
+  ]
 
 prop_deckLength :: Bool
 prop_deckLength = length deck == 52
