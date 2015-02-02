@@ -10,7 +10,7 @@ import Test.Tasty.QuickCheck as QC
 import Ratslap.Card (Card(..), CardVal(..), Deck, deck)
 import Ratslap.Game (slapValid)
 import Control.Monad
-import Data.List (break)
+import Debug.Trace (trace)
 
 --------------------------------------------------
 -- TODO: Should probably pull this out since its useful
@@ -76,7 +76,13 @@ gameSuite = testGroup "Game Tests" [
       prop_topTwoSameShuffleTypeIsCorrect,
     QC.testProperty
       "TopThreeSandwich ShuffleType always has the first and third card with same value"
-      prop_topThreeSandwichShuffleTypeIsCorrect
+      prop_topThreeSandwichShuffleTypeIsCorrect,
+    QC.testProperty
+      "slapValid is true if the top two cards are the same value"
+      prop_slapValidIfTopTwoCardsHaveSameValue,
+    QC.testProperty
+      "slapValid is true if the top three cards form a sandwich"
+      prop_slapValidIfTopThreeCardsAreSandwich
   ]
 
 
@@ -90,4 +96,16 @@ prop_topThreeSandwichShuffleTypeIsCorrect :: CardVal -> Bool
 prop_topThreeSandwichShuffleTypeIsCorrect cv =
   all (\c -> cardVal c == cv) [firstCard, thirdCard]
     where (firstCard:_:thirdCard:_) = deckFrom $ makeStackOrder $ TopThreeSandwich cv
+
+
+prop_slapValidIfTopTwoCardsHaveSameValue :: CardVal -> Bool
+prop_slapValidIfTopTwoCardsHaveSameValue cv =
+  slapValid testDeck == True
+    where testDeck = deckFrom $ makeStackOrder $ TopTwoSame cv
+
+
+prop_slapValidIfTopThreeCardsAreSandwich :: CardVal -> Bool
+prop_slapValidIfTopThreeCardsAreSandwich cv =
+  slapValid testDeck == True
+    where testDeck = deckFrom $ makeStackOrder $ TopThreeSandwich cv
 

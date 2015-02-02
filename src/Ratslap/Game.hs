@@ -4,8 +4,8 @@ module Ratslap.Game (
 
 import Ratslap.Card
 
-slapValid :: [Card] -> Bool
-slapValid (x:y:_)   = cardVal x == cardVal y
-slapValid (x:_:z:_) = cardVal x == cardVal z
+slapValid :: Deck -> Bool
+slapValid (x:y:z:_) = cardVal x == cardVal y ||
+                      cardVal x == cardVal z
 slapValid _         = False
 
