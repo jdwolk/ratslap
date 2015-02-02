@@ -2,7 +2,7 @@ module Ratslap.Test.Game (
   CardRestriction(..),
   ShuffleType(..),
   StackOrder(..),
-  deckFrom, makeStackOrder
+  deckFrom, makeStackOrder, gameSuite
 ) where
 
 import Test.Tasty
@@ -12,30 +12,21 @@ import Ratslap.Game (slapValid)
 import Control.Monad
 import Data.List (break)
 
+--------------------------------------------------
+-- TODO: Should probably pull this out since its useful
+-- outside of just the testing context
+-------------------------------------------------
+
 data CardRestriction = WithFixedVal CardVal |
                        WithAnyButVal CardVal |
                        WithRandVal deriving (Show)
 
 data ShuffleType = TopTwoSame CardVal |
-                   TopThreeSandwich CardVal |
-                   Shuffled deriving (Show)
+                   TopThreeSandwich CardVal deriving (Show)
 
 newtype StackOrder = StackOrder [CardRestriction]
                      deriving (Show)
 
-instance Arbitrary CardVal where
-  arbitrary = elements [ Two .. Ace ]
-
-instance Arbitrary ShuffleType where
-  arbitrary = oneof [ liftM TopTwoSame arbitrary,
-                      liftM TopThreeSandwich arbitrary,
-                      elements [Shuffled]
-                    ]
-
-instance Arbitrary StackOrder where
-  arbitrary = do
-    st <- arbitrary
-    return (makeStackOrder st)
 
 makeStackOrder :: ShuffleType -> StackOrder
 makeStackOrder (TopTwoSame val)       = StackOrder [ WithFixedVal val
@@ -44,7 +35,6 @@ makeStackOrder (TopTwoSame val)       = StackOrder [ WithFixedVal val
 makeStackOrder (TopThreeSandwich val) = StackOrder [ WithFixedVal val
                                                    , WithAnyButVal val
                                                    , WithFixedVal val]
-makeStackOrder Shuffled               = StackOrder []
 
 deckFrom :: StackOrder -> Deck
 deckFrom (StackOrder rs) = deckFrom' rs [] deck
@@ -66,6 +56,38 @@ deckFrom'' predFn moreRs toKeep rest =
       nextCard              = head matches
       otherCards            = tail matches ++ nonMatches
 
--- take 2 cards from the deck suchthat their CardVals are the same
+-------------------
 
+instance Arbitrary CardVal where
+  arbitrary = elements [ Two .. Ace ]
+
+instance Arbitrary ShuffleType where
+  arbitrary = oneof [ liftM TopTwoSame arbitrary,
+                      liftM TopThreeSandwich arbitrary
+                    ]
+
+instance Arbitrary StackOrder where
+  arbitrary = liftM makeStackOrder arbitrary
+
+gameSuite :: TestTree
+gameSuite = testGroup "Game Tests" [
+    QC.testProperty
+      "TopTwoSame ShuffleType always has the top two cards with same card value"
+      prop_topTwoSameShuffleTypeIsCorrect,
+    QC.testProperty
+      "TopThreeSandwich ShuffleType always has the first and third card with same value"
+      prop_topThreeSandwichShuffleTypeIsCorrect
+  ]
+
+
+prop_topTwoSameShuffleTypeIsCorrect :: CardVal -> Bool
+prop_topTwoSameShuffleTypeIsCorrect cv =
+  all (\c -> cardVal c == cv) [firstCard, secondCard]
+    where (firstCard:secondCard:_) = deckFrom $ makeStackOrder $ TopTwoSame cv
+
+
+prop_topThreeSandwichShuffleTypeIsCorrect :: CardVal -> Bool
+prop_topThreeSandwichShuffleTypeIsCorrect cv =
+  all (\c -> cardVal c == cv) [firstCard, thirdCard]
+    where (firstCard:_:thirdCard:_) = deckFrom $ makeStackOrder $ TopThreeSandwich cv
 
