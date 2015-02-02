@@ -12,7 +12,9 @@ import Ratslap.Game (slapValid)
 import Control.Monad
 import Data.List (break)
 
-data CardRestriction = WithFixedVal CardVal | WithRandVal deriving (Show)
+data CardRestriction = WithFixedVal CardVal |
+                       WithAnyButVal CardVal |
+                       WithRandVal deriving (Show)
 
 data ShuffleType = TopTwoSame CardVal |
                    TopThreeSandwich CardVal |
@@ -37,9 +39,10 @@ instance Arbitrary StackOrder where
 
 makeStackOrder :: ShuffleType -> StackOrder
 makeStackOrder (TopTwoSame val)       = StackOrder [ WithFixedVal val
-                                                   , WithFixedVal val]
+                                                   , WithFixedVal val
+                                                   , WithAnyButVal val ]
 makeStackOrder (TopThreeSandwich val) = StackOrder [ WithFixedVal val
-                                                   , WithRandVal
+                                                   , WithAnyButVal val
                                                    , WithFixedVal val]
 makeStackOrder Shuffled               = StackOrder []
 
@@ -50,10 +53,16 @@ deckFrom' :: [CardRestriction] -> [Card] -> [Card] -> Deck
 deckFrom' []                           toKeep rest = toKeep ++ rest
 deckFrom' (WithRandVal : moreRs)       toKeep rest =
   deckFrom' moreRs (head rest:toKeep) $ tail rest
+deckFrom' (WithAnyButVal val : moreRs) toKeep rest =
+  deckFrom'' (\c -> cardVal c /= val) moreRs toKeep rest
 deckFrom' (WithFixedVal val : moreRs)  toKeep rest =
-  deckFrom' moreRs (nextCard:toKeep) otherCards
+  deckFrom'' (\c -> cardVal c == val) moreRs toKeep rest
+
+deckFrom'' :: (Card -> Bool) -> [CardRestriction] -> [Card] -> [Card] -> Deck
+deckFrom'' predFn moreRs toKeep rest =
+  deckFrom' moreRs (toKeep ++ [nextCard]) otherCards
     where
-      (nonMatches, matches) = break (\c -> cardVal c == val) rest
+      (nonMatches, matches) = break predFn rest
       nextCard              = head matches
       otherCards            = tail matches ++ nonMatches
 
