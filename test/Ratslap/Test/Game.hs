@@ -5,12 +5,12 @@ module Ratslap.Test.Game (
   deckFrom, makeStackOrder, gameSuite
 ) where
 
-import Test.Tasty
-import Test.Tasty.QuickCheck as QC
-import Ratslap.Card (Card(..), CardVal(..), Deck, deck)
-import Ratslap.Game (slapValid)
-import Control.Monad
-import Debug.Trace (trace)
+import           Control.Monad
+import           Debug.Trace           (trace)
+import           Ratslap.Card          (Card (..), CardVal (..), Deck, deck)
+import           Ratslap.Game          (slapValid)
+import           Test.Tasty
+import           Test.Tasty.QuickCheck as QC
 
 --------------------------------------------------
 -- TODO: Should probably pull this out since its useful
@@ -42,7 +42,7 @@ deckFrom (StackOrder rs) = deckFrom' rs [] deck
 deckFrom' :: [CardRestriction] -> [Card] -> [Card] -> Deck
 deckFrom' []                           toKeep rest = toKeep ++ rest
 deckFrom' (WithRandVal : moreRs)       toKeep rest =
-  deckFrom' moreRs (head rest:toKeep) $ tail rest
+  deckFrom'' (const True) moreRs toKeep rest -- not _really_ random...
 deckFrom' (WithAnyButVal val : moreRs) toKeep rest =
   deckFrom'' (\c -> cardVal c /= val) moreRs toKeep rest
 deckFrom' (WithFixedVal val : moreRs)  toKeep rest =
