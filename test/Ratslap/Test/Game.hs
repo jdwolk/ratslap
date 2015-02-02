@@ -35,16 +35,16 @@ instance Arbitrary StackOrder where
     st <- arbitrary
     return (makeStackOrder st)
 
-
 makeStackOrder :: ShuffleType -> StackOrder
-makeStackOrder (TopTwoSame val) = StackOrder [WithFixedVal val, WithFixedVal val]
-makeStackOrder (TopThreeSandwich val) = StackOrder [WithFixedVal val, WithRandVal, WithFixedVal val]
-makeStackOrder Shuffled = StackOrder []
-
+makeStackOrder (TopTwoSame val)       = StackOrder [ WithFixedVal val
+                                                   , WithFixedVal val]
+makeStackOrder (TopThreeSandwich val) = StackOrder [ WithFixedVal val
+                                                   , WithRandVal
+                                                   , WithFixedVal val]
+makeStackOrder Shuffled               = StackOrder []
 
 deckFrom :: StackOrder -> Deck
 deckFrom (StackOrder rs) = deckFrom' rs [] deck
-
 
 deckFrom' :: [CardRestriction] -> [Card] -> [Card] -> Deck
 deckFrom' []                           toKeep rest = toKeep ++ rest
@@ -53,7 +53,7 @@ deckFrom' (WithRandVal : moreRs)       toKeep rest =
 deckFrom' (WithFixedVal val : moreRs)  toKeep rest =
   deckFrom' moreRs (nextCard:toKeep) otherCards
     where
-      (matches, nonMatches) = break (\c -> cardVal c == val) rest
+      (nonMatches, matches) = break (\c -> cardVal c == val) rest
       nextCard              = head matches
       otherCards            = tail matches ++ nonMatches
 
