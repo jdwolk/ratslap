@@ -24,11 +24,13 @@ executable ratslap
 
 test-suite Tests
   hs-source-dirs: test
-  main-is: tests.hs
-  Type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules: Spec
+  type: exitcode-stdio-1.0
   build-depends:        base ==4.7.*
                         , Cabal >= 1.16.0
                         , ratslap
                         , QuickCheck
                         , tasty
                         , tasty-quickcheck
+                        , hspec2
