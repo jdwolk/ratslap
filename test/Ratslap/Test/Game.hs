@@ -1,111 +1,32 @@
-module Ratslap.Test.Game (
-  CardRestriction(..),
-  ShuffleType(..),
-  StackOrder(..),
-  deckFrom, makeStackOrder, gameSuite
-) where
+module Ratslap.Test.Game where
 
-import           Control.Monad
-import           Debug.Trace           (trace)
-import           Ratslap.Card          (Card (..), CardVal (..), Deck, deck)
 import           Ratslap.Game          (slapValid)
+import           Ratslap.Card          (CardVal(..))
+import           Ratslap.Deck          (deckFrom, makeStackOrder, ShuffleType(..))
 import           Test.Tasty
-import           Test.Tasty.QuickCheck as QC
-
---------------------------------------------------
--- TODO: Should probably pull this out since its useful
--- outside of just the testing context
--------------------------------------------------
-
-data CardRestriction = WithFixedVal CardVal |
-                       WithAnyButVal CardVal |
-                       WithRandVal deriving (Show)
-
-data ShuffleType = TopTwoSame CardVal |
-                   TopThreeSandwich CardVal deriving (Show)
-
-newtype StackOrder = StackOrder [CardRestriction]
-                     deriving (Show)
-
-
-makeStackOrder :: ShuffleType -> StackOrder
-makeStackOrder (TopTwoSame val)       = StackOrder [ WithFixedVal val
-                                                   , WithFixedVal val
-                                                   , WithAnyButVal val ]
-makeStackOrder (TopThreeSandwich val) = StackOrder [ WithFixedVal val
-                                                   , WithAnyButVal val
-                                                   , WithFixedVal val]
-
-deckFrom :: StackOrder -> Deck
-deckFrom (StackOrder rs) = deckFrom' rs [] deck
-
-deckFrom' :: [CardRestriction] -> [Card] -> [Card] -> Deck
-deckFrom' []                           toKeep rest = toKeep ++ rest
-deckFrom' (WithRandVal : moreRs)       toKeep rest =
-  deckFrom'' (const True) moreRs toKeep rest -- not _really_ random...
-deckFrom' (WithAnyButVal val : moreRs) toKeep rest =
-  deckFrom'' (\c -> cardVal c /= val) moreRs toKeep rest
-deckFrom' (WithFixedVal val : moreRs)  toKeep rest =
-  deckFrom'' (\c -> cardVal c == val) moreRs toKeep rest
-
-deckFrom'' :: (Card -> Bool) -> [CardRestriction] -> [Card] -> [Card] -> Deck
-deckFrom'' predFn moreRs toKeep rest =
-  deckFrom' moreRs (toKeep ++ [nextCard]) otherCards
-    where
-      (nonMatches, matches) = break predFn rest
-      nextCard              = head matches
-      otherCards            = tail matches ++ nonMatches
-
--------------------
+import           Test.Tasty.QuickCheck (testProperty, Arbitrary(..), elements)
 
 instance Arbitrary CardVal where
-  arbitrary = elements [ Two .. Ace ]
-
-instance Arbitrary ShuffleType where
-  arbitrary = oneof [ liftM TopTwoSame arbitrary,
-                      liftM TopThreeSandwich arbitrary
-                    ]
-
-instance Arbitrary StackOrder where
-  arbitrary = liftM makeStackOrder arbitrary
+  arbitrary = elements [Two .. Ace]
 
 gameSuite :: TestTree
 gameSuite = testGroup "Game Tests" [
-    QC.testProperty
-      "TopTwoSame ShuffleType always has the top two cards with same card value"
-      prop_topTwoSameShuffleTypeIsCorrect,
-    QC.testProperty
-      "TopThreeSandwich ShuffleType always has the first and third card with same value"
-      prop_topThreeSandwichShuffleTypeIsCorrect,
-    QC.testProperty
+    testProperty
       "slapValid is true if the top two cards are the same value"
       prop_slapValidIfTopTwoCardsHaveSameValue,
-    QC.testProperty
+    testProperty
       "slapValid is true if the top three cards form a sandwich"
       prop_slapValidIfTopThreeCardsAreSandwich
   ]
 
-
-prop_topTwoSameShuffleTypeIsCorrect :: CardVal -> Bool
-prop_topTwoSameShuffleTypeIsCorrect cv =
-  all (\c -> cardVal c == cv) [firstCard, secondCard]
-    where (firstCard:secondCard:_) = deckFrom $ makeStackOrder $ TopTwoSame cv
-
-
-prop_topThreeSandwichShuffleTypeIsCorrect :: CardVal -> Bool
-prop_topThreeSandwichShuffleTypeIsCorrect cv =
-  all (\c -> cardVal c == cv) [firstCard, thirdCard]
-    where (firstCard:_:thirdCard:_) = deckFrom $ makeStackOrder $ TopThreeSandwich cv
-
-
 prop_slapValidIfTopTwoCardsHaveSameValue :: CardVal -> Bool
 prop_slapValidIfTopTwoCardsHaveSameValue cv =
-  slapValid testDeck == True
+  slapValid testDeck
     where testDeck = deckFrom $ makeStackOrder $ TopTwoSame cv
 
 
 prop_slapValidIfTopThreeCardsAreSandwich :: CardVal -> Bool
 prop_slapValidIfTopThreeCardsAreSandwich cv =
-  slapValid testDeck == True
+  slapValid testDeck
     where testDeck = deckFrom $ makeStackOrder $ TopThreeSandwich cv
 

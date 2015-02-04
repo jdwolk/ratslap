@@ -1,9 +1,7 @@
 module Ratslap.Card (
   Card(..),
   Suit(..),
-  CardVal(..),
-  Deck,
-  deck
+  CardVal(..)
 ) where
 
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Eq, Read, Enum)
@@ -42,8 +40,4 @@ data Card = Card {
 
 instance Show Card where
   show (Card v s) = "[" ++ show v ++ show s ++ "]"
-
-type Deck = [Card]
-deck :: Deck
-deck = [Card v s | v <- [Two .. Ace], s <- [Clubs .. Spades] ]
 
